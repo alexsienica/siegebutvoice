@@ -1,0 +1,30 @@
+{
+  "model_path": "models/vosk-model-small-en-us-0.15",
+  "microphone": null,
+  "minimum_confidence": 0.65,
+  "max_hold_seconds": 30,
+  "commands": {
+    "walk": {"phrases": ["walk", "forward"], "action": "hold", "keys": ["w"], "group": "forward"},
+    "back": {"phrases": ["back", "backward"], "action": "hold", "keys": ["s"], "group": "forward"},
+    "left": {"phrases": ["left"], "action": "hold", "keys": ["a"], "group": "sideways"},
+    "right": {"phrases": ["right"], "action": "hold", "keys": ["d"], "group": "sideways"},
+    "run": {"phrases": ["run", "sprint"], "action": "hold", "keys": ["w", "shift"], "group": "forward"},
+    "stop": {"phrases": ["stop", "freeze"], "action": "stop"},
+    "pause": {"phrases": ["pause controls"], "action": "pause"},
+    "reload": {"phrases": ["reload"], "action": "tap", "keys": ["r"]},
+    "crouch": {"phrases": ["crouch"], "action": "tap", "keys": ["c"]},
+    "prone": {"phrases": ["prone"], "action": "tap", "keys": ["ctrl"]},
+    "vault": {"phrases": ["vault"], "action": "tap", "keys": ["space"]},
+    "lean_left": {"phrases": ["lean left"], "action": "tap", "keys": ["q"]},
+    "lean_right": {"phrases": ["lean right"], "action": "tap", "keys": ["e"]},
+    "interact": {"phrases": ["interact", "use"], "action": "tap", "keys": ["f"]},
+    "gadget": {"phrases": ["gadget"], "action": "tap", "keys": ["g"]},
+    "primary": {"phrases": ["primary"], "action": "tap", "keys": ["1"]},
+    "secondary": {"phrases": ["secondary"], "action": "tap", "keys": ["2"]},
+    "melee": {"phrases": ["melee"], "action": "tap", "keys": ["v"]},
+    "shoot": {"phrases": ["shoot", "fire"], "action": "hold", "keys": ["mouse1"], "group": "shooting"},
+    "stop_shooting": {"phrases": ["stop shooting", "cease fire"], "action": "release", "group": "shooting"},
+    "aim": {"phrases": ["aim"], "action": "hold", "keys": ["mouse2"], "group": "aiming"},
+    "stop_aiming": {"phrases": ["stop aiming", "lower weapon"], "action": "release", "group": "aiming"}
+  }
+}
