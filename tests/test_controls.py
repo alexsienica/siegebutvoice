@@ -128,6 +128,74 @@ class ControlsTests(unittest.TestCase):
         self.command("shoot")
         self.assertEqual(self.keyboard.events, [("mouse down", "left")])
 
+    def test_shoot_releases_at_configured_duration_and_keeps_other_inputs(self):
+        self.command("walk")
+        self.command("aim")
+        self.command("shoot")
+        duration = self.config["commands"]["shoot"]["duration_seconds"]
+        self.now = duration - 0.001
+        self.controller.tick()
+        self.assertEqual(self.keyboard.down, {"w", "mouse1", "mouse2"})
+        self.now = duration
+        self.controller.tick()
+        self.assertEqual(self.keyboard.down, {"w", "mouse2"})
+
+    def test_other_commands_do_not_extend_shoot_timer(self):
+        self.command("shoot")
+        duration = self.config["commands"]["shoot"]["duration_seconds"]
+        self.now = duration / 2
+        self.command("walk")
+        self.command("aim")
+        self.now = duration
+        self.controller.tick()
+        self.assertEqual(self.keyboard.down, {"w", "mouse2"})
+
+    def test_repeating_shoot_restarts_its_timer(self):
+        self.command("shoot")
+        duration = self.config["commands"]["shoot"]["duration_seconds"]
+        self.now = duration / 2
+        self.command("shoot")
+        self.now = duration
+        self.controller.tick()
+        self.assertIn("mouse1", self.keyboard.down)
+        self.now = duration * 1.5
+        self.controller.tick()
+        self.assertNotIn("mouse1", self.keyboard.down)
+
+    def test_shoot_duration_can_be_changed(self):
+        command = dict(self.phrases["shoot"][1], duration_seconds=2.5)
+        self.controller.execute(command)
+        self.now = 2.49
+        self.controller.tick()
+        self.assertIn("mouse1", self.keyboard.down)
+        self.now = 2.5
+        self.controller.tick()
+        self.assertFalse(self.keyboard.down)
+
+    def test_stop_clears_timed_holds(self):
+        self.command("shoot")
+        self.command("stop")
+        self.assertFalse(self.controller.group_deadlines)
+        self.now = 2
+        self.command("walk")
+        self.controller.tick()
+        self.assertEqual(self.keyboard.down, {"w"})
+
+    def test_untimed_replacement_removes_previous_timer(self):
+        self.command("shoot")
+        self.controller.execute({"action": "hold", "keys": ["w"], "group": "shooting"})
+        self.now = 2
+        self.controller.tick()
+        self.assertEqual(self.keyboard.down, {"w"})
+
+    def test_invalid_durations_are_rejected(self):
+        for value in (0, -1, 301, True, "1", float("nan"), float("inf")):
+            with self.subTest(value=value):
+                self.check_invalid(lambda c: c["commands"]["shoot"].update(duration_seconds=value))
+
+    def test_duration_on_non_hold_is_rejected(self):
+        self.check_invalid(lambda c: c["commands"]["reload"].update(duration_seconds=1))
+
     def test_stop_and_pause_release_mouse_and_keyboard(self):
         for phrase in ("stop", "pause controls"):
             with self.subTest(phrase=phrase):

@@ -1,0 +1,28 @@
+SiegeButVoice - Windows 64-bit portable app
+
+1. Extract the WHOLE ZIP to a folder you can write to (e.g. Desktop).
+2. Open SiegeButVoice.exe. Python does not need to be installed.
+3. Select your microphone. Test mode starts enabled; verify commands in the log.
+4. Uncheck Test mode when ready, switch to the window you want to control,
+   and press F8 to enable voice controls. Press F8 again to disable them.
+
+Commands work in the active window, whether Siege is open or not.
+"walk" holds W; "stop" releases every held key and mouse button.
+"shoot" holds the left mouse button for 1 second, then releases automatically.
+Change commands.shoot.duration_seconds in config.json to adjust that duration.
+"stop shooting" releases it early. Saying "shoot" again restarts its timer.
+"aim" holds the right mouse button; "stop aiming" releases it.
+You move the mouse yourself. Set Siege aiming to Hold.
+F8 off and closing the app also release all held inputs.
+
+Edit config.json to change command names or bindings, then click Reload config.
+The English speech model is included. No download or internet is needed to play.
+Keep the _internal folder, models folder, and config.json beside the EXE.
+Do not run the EXE directly from inside the ZIP.
+
+This is an unsigned portable build. Test in a private/custom match first.
+See README.md for the full command list and troubleshooting.
+
+For a diagnostic check, run SiegeButVoice.exe --self-test.
+This writes self-test-result.json in this folder, without recording audio
+or sending keystrokes/clicks.

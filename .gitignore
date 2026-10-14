@@ -2,3 +2,7 @@
 __pycache__/
 *.pyc
 models/
+build/
+dist/
+*.spec
+self-test-result.json

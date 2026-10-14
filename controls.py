@@ -62,6 +62,11 @@ def load_config(path):
             not isinstance(command.get("group"), str) or not command["group"].strip()
         ):
             raise ValueError(f"{name}: hold/release requires a group name.")
+        if "duration_seconds" in command:
+            duration = command["duration_seconds"]
+            if (action != "hold" or type(duration) not in (int, float)
+                    or not math.isfinite(duration) or not 0.05 <= duration <= config["max_hold_seconds"]):
+                raise ValueError(f"{name}: duration_seconds requires hold and must be between 0.05 and max_hold_seconds.")
     return config, phrases
 
 
@@ -71,6 +76,7 @@ class KeyboardController:
         self.max_hold_seconds = max_hold_seconds
         self.clock = clock
         self.groups = {}
+        self.group_deadlines = {}
         self.down = set()
         self.tap_deadlines = {}
         self.hold_deadline = None
@@ -104,11 +110,17 @@ class KeyboardController:
         if action in {"stop", "pause"}:
             self.release_all()
         elif action == "hold":
-            self.groups[command["group"]] = set(command["keys"])
+            group = command["group"]
+            self.groups[group] = set(command["keys"])
+            if "duration_seconds" in command:
+                self.group_deadlines[group] = self.clock() + command["duration_seconds"]
+            else:
+                self.group_deadlines.pop(group, None)
             self.hold_deadline = self.clock() + self.max_hold_seconds
             self._sync()
         elif action == "release":
             self.groups.pop(command["group"], None)
+            self.group_deadlines.pop(command["group"], None)
             self._sync()
         elif action == "tap":
             for key in command["keys"]:
@@ -120,13 +132,19 @@ class KeyboardController:
         expired = self.hold_deadline is not None and now >= self.hold_deadline
         if expired:
             self.groups.clear()
+            self.group_deadlines.clear()
             self.hold_deadline = None
+        for group, deadline in list(self.group_deadlines.items()):
+            if now >= deadline:
+                self.groups.pop(group, None)
+                del self.group_deadlines[group]
         self.tap_deadlines = {k: end for k, end in self.tap_deadlines.items() if end > now}
         self._sync()
         return expired
 
     def release_all(self):
         self.groups.clear()
+        self.group_deadlines.clear()
         self.tap_deadlines.clear()
         self.hold_deadline = None
         errors = []

@@ -16,7 +16,7 @@ from tkinter import messagebox, ttk
 from controls import KeyboardController, load_config, normalize
 from voice import listen
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(sys.executable).resolve().parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parent
 CONFIG = ROOT / "config.json"
 MODEL_NAME = "vosk-model-small-en-us-0.15"
 MODEL_URL = f"https://alphacephei.com/vosk/models/{MODEL_NAME}.zip"
@@ -140,6 +140,8 @@ class App:
             for command in config["commands"].values():
                 action = command["action"]
                 description = f"{action}: {' + '.join(command.get('keys', []))}" if action in {"hold", "tap"} else action
+                if "duration_seconds" in command:
+                    description += f" ({command['duration_seconds']:g}s)"
                 self.guide.insert("", "end", values=(", ".join(command["phrases"]), description))
             self.write_log("Configuration loaded.")
         except Exception as error:
@@ -340,11 +342,69 @@ def main():
         pydirectinput.PAUSE = 0
         App(root, sounddevice, pydirectinput, WindowsState())
     except Exception as error:
-        messagebox.showerror("Startup error", f"{error}\n\nInstall dependencies with: python -m pip install -r requirements.txt")
+        help_text = ("Extract the entire app ZIP again, including the _internal folder."
+                     if getattr(sys, "frozen", False) else
+                     "Install dependencies with: python -m pip install -r requirements.txt")
+        messagebox.showerror("Startup error", f"{error}\n\n{help_text}")
         root.destroy()
         return
     root.mainloop()
 
 
+def self_test():
+    """Validate a delivered bundle without recording audio or injecting input."""
+    report = {"ok": False, "frozen": bool(getattr(sys, "frozen", False)), "app_folder": str(ROOT)}
+    root = None
+    try:
+        import sounddevice
+        import pydirectinput
+        from vosk import Model, KaldiRecognizer, SetLogLevel
+        from windows_input import WindowsState
+
+        config, phrases = load_config(CONFIG)
+        SetLogLevel(-1)
+        model = Model(str(ROOT / config["model_path"]))
+        recognizer = KaldiRecognizer(model, 16000, json.dumps([*phrases, "[unk]"]))
+        recognizer.AcceptWaveform(bytes(32000))
+        shoot = config["commands"].get("shoot", {})
+        if "duration_seconds" in shoot:
+            # Exercise compiled timing logic using fake input, never the real backend.
+            from types import SimpleNamespace
+            from controls import MOUSE_BUTTONS
+            down = set()
+            reverse_buttons = {button: key for key, button in MOUSE_BUTTONS.items()}
+            fake = SimpleNamespace(keyDown=down.add, keyUp=down.discard,
+                                   mouseDown=lambda *, button: down.add(reverse_buttons[button]),
+                                   mouseUp=lambda *, button: down.discard(reverse_buttons[button]))
+            now = [0.0]
+            probe = KeyboardController(fake, config["max_hold_seconds"], clock=lambda: now[0])
+            probe.execute(shoot)
+            assert down == set(shoot["keys"]), "Timed shooting did not hold its inputs"
+            now[0] = shoot["duration_seconds"] - 0.001
+            probe.tick()
+            assert down, "Timed shooting released too early"
+            now[0] = shoot["duration_seconds"]
+            probe.tick()
+            assert not down, "Timed shooting did not release"
+            report["timed_shoot_seconds"] = shoot["duration_seconds"]
+        root = tk.Tk()
+        root.withdraw()
+        app = App(root, sounddevice, pydirectinput, WindowsState())
+        root.update()
+        report.update(ok=True, input_devices=len(app.devices), command_phrases=len(phrases),
+                      gui="ok", speech_model="ok", config="ok")
+        app.close()
+        root = None
+    except Exception as error:
+        report["error"] = str(error)
+    finally:
+        if root is not None:
+            root.destroy()
+        (ROOT / "self-test-result.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
+    return 0 if report["ok"] else 1
+
+
 if __name__ == "__main__":
+    if "--self-test" in sys.argv:
+        raise SystemExit(self_test())
     main()

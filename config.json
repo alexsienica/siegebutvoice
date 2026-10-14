@@ -22,7 +22,7 @@
     "primary": {"phrases": ["primary"], "action": "tap", "keys": ["1"]},
     "secondary": {"phrases": ["secondary"], "action": "tap", "keys": ["2"]},
     "melee": {"phrases": ["melee"], "action": "tap", "keys": ["v"]},
-    "shoot": {"phrases": ["shoot", "fire"], "action": "hold", "keys": ["mouse1"], "group": "shooting"},
+    "shoot": {"phrases": ["shoot", "fire"], "action": "hold", "keys": ["mouse1"], "group": "shooting", "duration_seconds": 1.0},
     "stop_shooting": {"phrases": ["stop shooting", "cease fire"], "action": "release", "group": "shooting"},
     "aim": {"phrases": ["aim"], "action": "hold", "keys": ["mouse2"], "group": "aiming"},
     "stop_aiming": {"phrases": ["stop aiming", "lower weapon"], "action": "release", "group": "aiming"}

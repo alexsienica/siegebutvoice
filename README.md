@@ -8,6 +8,14 @@ currently active window.
 
 ## Setup
 
+For a computer without Python, use **SiegeButVoice-Windows-x64.zip** from `dist/`.
+Extract the entire ZIP, open `SiegeButVoice.exe`, select a microphone, and use F8.
+The Python runtime, dependencies, and offline English model are included. Keep
+the `_internal` and `models` folders and `config.json` beside the EXE.
+See `DELIVERY.txt` for recipient instructions.
+
+### Running from source
+
 Install **64-bit Python 3.11 or 3.12** from [python.org](https://www.python.org/downloads/windows/)
 with pip and Tcl/Tk enabled. In PowerShell, open this folder and run:
 
@@ -42,7 +50,7 @@ No EXE is required.
 | back / backward | Hold S |
 | left / right | Hold A / D |
 | run / sprint | Hold W + Shift |
-| shoot / fire | Hold Mouse 1 (left button) |
+| shoot / fire | Hold Mouse 1 for 1 second (configurable), then release |
 | stop shooting / cease fire | Release Mouse 1 |
 | aim | Hold Mouse 2 (right button) |
 | stop aiming / lower weapon | Release Mouse 2 |
@@ -64,6 +72,9 @@ Forward/back/run replace each other; left/right replace each other. You can say
 Shooting and aiming can be held together, independently of movement. Use
 hold-mode aiming in Siege so holding Mouse 2 aims down sights. The default
 timeout releases held keys and mouse buttons after 30 seconds without a new hold command.
+Shooting has its own timer: other commands do not extend it. Saying `shoot`
+again while firing restarts that timer. `stop shooting`, `stop`, or F8 off
+can release it early.
 Turning controls off, closing the app, changing settings, and microphone errors
 release keys and mouse buttons. Switching windows keeps controls on; press F8 whenever you want
 to stop them.
@@ -113,9 +124,14 @@ Use `mouse1` and `mouse2` in `keys` for the left and right mouse buttons.
 They support the same hold/tap/release actions, without moving the pointer:
 
 ```json
-"shoot": {"phrases": ["shoot", "fire"], "action": "hold", "keys": ["mouse1"], "group": "shooting"},
+"shoot": {"phrases": ["shoot", "fire"], "action": "hold", "keys": ["mouse1"], "group": "shooting", "duration_seconds": 1.0},
 "stop_shooting": {"phrases": ["stop shooting", "cease fire"], "action": "release", "group": "shooting"}
 ```
+
+Change `commands.shoot.duration_seconds` to set the firing duration, then click
+**Reload config**. For example, `0.5` fires for half a second and `2.0` for two
+seconds. This optional setting works for any `hold` command; its value must be
+between 0.05 seconds and `max_hold_seconds`. Aim continues to hold until released.
 
 Other settings:
 
@@ -145,3 +161,24 @@ keystrokes required):
 ```
 
 The speech implementation follows [Vosk's microphone example](https://github.com/alphacep/vosk-api/blob/master/python/example/test_microphone.py).
+
+## Build the Windows release
+
+With the default model already downloaded, run on Windows:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-build.txt
+.\.venv\Scripts\python.exe build_release.py
+```
+
+This uses [PyInstaller](https://pyinstaller.org/en/stable/usage.html) to produce
+`dist/SiegeButVoice/SiegeButVoice.exe` and `dist/SiegeButVoice-Windows-x64.zip`.
+Send the ZIP; the recipient does not install Python. The editable configuration
+and speech model stay outside the EXE. Builds reset the microphone selection.
+
+To verify a build without recording audio or sending inputs, run:
+
+```powershell
+Start-Process .\dist\SiegeButVoice\SiegeButVoice.exe -ArgumentList '--self-test' -Wait
+Get-Content .\dist\SiegeButVoice\self-test-result.json
+```
