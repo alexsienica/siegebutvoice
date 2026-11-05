@@ -1,7 +1,7 @@
 # Voice Activated Siege
 
 A small Windows Python app for playing Rainbow Six Siege with spoken keyboard
-and mouse button commands. Made for [NAYR](https://www.youtube.com/@NAYR9000).
+and mouse button commands. Made for [NAYR9000](https://www.youtube.com/@NAYR9000) on YouTube
 
 ## Setup
 
