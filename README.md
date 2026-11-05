@@ -1,14 +1,11 @@
 # Voice Activated Siege
 
 A small Windows Python app for playing Rainbow Six Siege with spoken keyboard
-and mouse button commands. Mouse movement stays with you. Recognition
-runs locally with Vosk; audio is not uploaded. **F8** toggles voice controls on
-and off globally. Siege does not need to be open; commands send inputs to the
-currently active window.
+and mouse button commands. Made for [NAYR](https://www.youtube.com/@NAYR9000).
 
 ## Setup
 
-For a computer without Python, use **SiegeButVoice-Windows-x64.zip** from `dist/`.
+For a computer without Python, use **SiegeButVoice-Windows-x64.zip** from releases.
 Extract the entire ZIP, open `SiegeButVoice.exe`, select a microphone, and use F8.
 The Python runtime, dependencies, and offline English model are included. Keep
 the `_internal` and `models` folders and `config.json` beside the EXE.
